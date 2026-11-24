@@ -22,16 +22,16 @@ An AI-powered personal assistant for persistent conversations and task managemen
 
 ## Architecture
 
-The React client calls the Express API with browser credentials enabled. The API authenticates requests using a session cookie and a MongoDB-backed session store. Protected conversation and chat handlers use the authenticated user's ID to scope database access. For chat requests, the backend loads the owned conversation's history, sends it and the user's message to Gemini, executes any validated tool calls against that user's tasks, returns tool results to Gemini, and stores the completed message exchange in MongoDB.
+In production, Express serves the built React client and the API from the same origin. The browser calls `/api` with its session cookie, and the API stores sessions in MongoDB. During local development, Vite proxies `/api` requests to the Express server. Protected conversation and chat handlers use the authenticated user's ID to scope database access. For chat requests, the backend loads the owned conversation's history, sends it and the user's message to Gemini, executes any validated tool calls against that user's tasks, returns tool results to Gemini, and stores the completed message exchange in MongoDB.
 
 ```mermaid
 flowchart LR
-    Browser[React + Vite client] -->|Credentialed HTTP requests| API[Express API]
-    API -->|Session lookup| Sessions[(MongoDB sessions)]
-    API -->|Users, conversations, messages, tasks| DB[(MongoDB application data)]
-    API -->|Chat history, prompt, tool results| Gemini[Google Gemini API]
-    Gemini -->|Text reply or tool request| API
-    API -->|JSON response| Browser
+    Browser[Browser + React SPA] -->|Same-origin /api requests| Express[Express server]
+    Express -->|Serves client/dist assets| Browser
+    Express -->|Session lookup| Sessions[(MongoDB sessions)]
+    Express -->|Users, conversations, messages, tasks| DB[(MongoDB application data)]
+    Express -->|Chat history, prompt, tool results| Gemini[Google Gemini API]
+    Gemini -->|Text reply or tool request| Express
 ```
 
 Gemini does not access MongoDB directly. It can request only the tools declared by the backend; the backend validates their arguments and supplies the authenticated user's ID when executing task operations.
@@ -262,7 +262,7 @@ From the project root:
 npm install
 ```
 
-Copy the root `.env.example` to `.env` and set the backend values described below. `SESSION_SECRET` must be set or the server will not start. For the frontend, copy `client/.env.example` to `client/.env` and set `VITE_API_URL` to your API base URL. Do not commit either `.env` file.
+Copy the root `.env.example` to `.env` and set the backend values described below. `SESSION_SECRET` must be set or the server will not start. For the frontend, copy `client/.env.example` to `client/.env`; its `VITE_API_URL=/api` value works with the local Vite proxy and the same-origin production deployment. Do not commit either `.env` file.
 
 Start the API:
 
@@ -282,7 +282,18 @@ npm install
 npm run dev
 ```
 
-Vite serves the client on `http://localhost:5173` by default. The client uses `http://localhost:3000/api` unless `VITE_API_URL` is set.
+Vite serves the client on `http://localhost:5173` by default and proxies `/api` requests to `http://localhost:3000`. In production, Express serves the frontend and API together, so the client uses the relative `/api` path.
+
+### Deploy frontend and backend together on Render
+
+Create one Render **Web Service** with the repository root as its root directory. Use:
+
+```text
+Build Command: npm ci && npm ci --prefix client --include=dev && npm --prefix client run build
+Start Command: npm start
+```
+
+The Vite build writes the frontend to `client/dist`, which Express serves. Open the application at the Web Service URL; the UI and `/api` endpoints then share one origin. Set the backend environment variables in Render as described below. `VITE_API_URL` defaults to `/api`; if configuring it explicitly for the frontend build, keep it as `/api`.
 
 ## Environment variables
 
@@ -296,7 +307,7 @@ Never place actual credentials in this README or commit them to source control.
 | `CLIENT_ORIGINS` | No | Comma-separated allowed frontend origins for credentialed CORS. Defaults to `http://localhost:5173,http://localhost:5175`. |
 | `PORT` | No | API port. Defaults to `3000`. |
 | `NODE_ENV` | No | Set to `production` in production to enable secure cookies and proxy trust. |
-| `VITE_API_URL` | No | Frontend API base URL. Defaults to `http://localhost:3000/api`. Set in the client build environment when deploying elsewhere. |
+| `VITE_API_URL` | No | Frontend API base URL. Defaults to `/api`, which works with the Vite development proxy and the same-origin production deployment. |
 
 The root `.env.example` contains placeholders for backend settings. `client/.env.example` contains the frontend's build-time API URL placeholder.
 

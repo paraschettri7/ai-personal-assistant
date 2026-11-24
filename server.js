@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import connectDB from "./db.js";
 import chatRoutes from "./routes/chatRoutes.js";
@@ -11,6 +13,8 @@ import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const appDirectory = path.dirname(fileURLToPath(import.meta.url));
+const clientDistDirectory = path.join(appDirectory, "client", "dist");
 const isProduction = process.env.NODE_ENV === "production";
 const sessionSecret = process.env.SESSION_SECRET;
 const allowedOrigins = new Set(
@@ -52,6 +56,18 @@ app.use(session({
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api", (_req, res) => {
+    return res.status(404).json({ error: "API route not found." });
+});
+
+app.use(express.static(clientDistDirectory));
+app.get("/{*path}", (req, res, next) => {
+    if (req.path.startsWith("/api") || !req.accepts("html")) {
+        return next();
+    }
+
+    return res.sendFile(path.join(clientDistDirectory, "index.html"));
+});
 
 const startServer = async () => {
     try {

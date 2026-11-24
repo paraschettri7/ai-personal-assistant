@@ -2,6 +2,10 @@
 
 An AI-powered personal assistant for persistent conversations and task management. Users register or log in with an email and password, then chat with Google Gemini. Gemini can call backend tools to create, retrieve, update, and delete that user's tasks. Conversations, messages, users, tasks, and login sessions are stored in MongoDB.
 
+## Live Demo
+
+**Live Application:** [AI Personal Assistant](https://ai-personal-assistant-api.onrender.com)
+
 ## Features
 
 - AI-powered conversational assistant using Google Gemini.

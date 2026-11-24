@@ -262,7 +262,7 @@ From the project root:
 npm install
 ```
 
-Copy `.env.example` to `.env`, then set the values described below. `SESSION_SECRET` must be set or the server will not start. Supply your own MongoDB URI and Gemini API key; do not commit `.env`.
+Copy the root `.env.example` to `.env` and set the backend values described below. `SESSION_SECRET` must be set or the server will not start. For the frontend, copy `client/.env.example` to `client/.env` and set `VITE_API_URL` to your API base URL. Do not commit either `.env` file.
 
 Start the API:
 
@@ -298,7 +298,7 @@ Never place actual credentials in this README or commit them to source control.
 | `NODE_ENV` | No | Set to `production` in production to enable secure cookies and proxy trust. |
 | `VITE_API_URL` | No | Frontend API base URL. Defaults to `http://localhost:3000/api`. Set in the client build environment when deploying elsewhere. |
 
-**Setup note:** The current `.env.example` contains `SESSION_SECRET` and `CLIENT_ORIGINS`, but omits the required `MONGODB_URI` and `GEMINI_API_KEY`. Add those two values to your local `.env` file.
+The root `.env.example` contains placeholders for backend settings. `client/.env.example` contains the frontend's build-time API URL placeholder.
 
 ## Tests and production build
 

@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
 import "dotenv/config";
-import dns from "node:dns";
-
-// Use public DNS servers instead of the default resolver
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const connectDB = async () => {
     try {
